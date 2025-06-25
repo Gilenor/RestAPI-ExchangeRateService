@@ -1,6 +1,7 @@
-from decimal import Decimal, getcontext
-import inspect
 import sqlite3
+
+from decimal import Decimal, getcontext
+
 
 DB_FILE = "data/currency_exchange.sqlite3"
 
@@ -14,17 +15,9 @@ CURRENCY_BY_CODE_QUERY = CURRENCY_QUERY.format("Code")
 EXCHANGE_ROWID_QUERY = EXCHANGE_QUERY.format("rowid")
 
 
-sqlite3_exceptions = [
-    name
-    for name, value in vars(sqlite3).items()
-    if inspect.isclass(value) and issubclass(value, Exception)
-]
-
-# print(*sqlite3_exceptions, sep='\n')
-# print(dir(sqlite3))
-
 get_currency_by_id = lambda c_id: get_currency(CURRENCY_BY_ID_QUERY, c_id)
 get_currency_by_code = lambda c_code: get_currency(CURRENCY_BY_CODE_QUERY, c_code)
+
 
 
 def adapt_decimal(d):
@@ -278,22 +271,3 @@ def patch_exchange_rate(exchange_rate_id: int, rate: Decimal):
         cur.close()
 
     return get_record_by_rowid(EXCHANGE_ROWID_QUERY, exchange_rate_id)
-
-
-if __name__ == "__main__":
-    num = 20.1061
-
-    a = Decimal(str(num))
-    b = Decimal(10)
-
-    print("a:", a, "b:", b)
-    print(f"{a} / {b} = {a / b}")
-
-    print("Sqlite3 version:", sqlite3.sqlite_version)
-
-    with sqlite3.connect(DB_FILE) as con:
-        try:
-            new_exchange_rate = add_exchange_rate(999, 1000, Decimal(0.66))
-            print(new_exchange_rate)
-        except sqlite3.Error as err:
-            print("type: {}, message: {}".format(type(err), err))

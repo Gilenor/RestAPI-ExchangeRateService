@@ -2,7 +2,6 @@ import sqlite3
 import requests
 
 from decimal import Decimal
-from exceptions import get_error_type
 from model import data_base as base
 
 
@@ -76,7 +75,7 @@ for currency in filter(lambda c: c[2] != "", currencies):
         print(c)
     except sqlite3.Error as e:
         #pass
-        print(get_error_type(type(e)))
+        print(type(e))
 
 
 # заполняем таблицу <exchange_rates>
@@ -89,11 +88,4 @@ for exchange in exchanges:
         print(e)
     except sqlite3.Error as e:
         #pass
-        print(get_error_type(type(e)))
-
-try:
-    base.add_currency(())  # ("LOL", "Valute of cringeville"))
-except sqlite3.Error as e:
-    print(get_error_type(type(e)), ":", e)
-except Exception as e:
-    print(f"{type(e)}: {e}")
+        print(type(e))

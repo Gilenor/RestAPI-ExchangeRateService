@@ -55,12 +55,6 @@ def get_exchange(exchange: ExchangeDTO) -> ExchangeDTO:
     if (base_currency is None) or (target_currency is None):
         raise CurrencyNotFoundError()
 
-    print(
-        __exchanges.get_path(exchange.base_currency.code, exchange.target_currency.code)
-    )
-    # __exchanges.print_graph()
-    # print(__exchanges)
-
     exchange_rate = __get_exchange_rate_for_pair(
         CurrencyDTO(*base_currency), CurrencyDTO(*target_currency)
     )
@@ -179,7 +173,6 @@ def __get_exchange_rate_for_pair(
             return None
 
         rate = rate * pair_rate
-        print(type(rate), rate)
 
     return ExchangeRateDTO(
         # _id=exchange_rate[0],
@@ -206,8 +199,6 @@ def __get_rate_for_pair(from_currency_id: int, to_currency_id: int) -> Decimal:
     else:
         exchange_rate = exchange_rates[1]
         rate = Decimal(1) / exchange_rate[3]
-
-    # print(type(exchange_rate[3]), rate)
 
     return rate
 
