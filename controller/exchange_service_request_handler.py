@@ -1,7 +1,6 @@
 import json
 
-from entities import CurrencyDTO, ExchangeDTO, ExchangeRateDTO, Response
-from exceptions import CurrencyFieldError, ExchangeFieldError, ExchangeRateFieldError
+from entities import CurrencyDTO, ExchangeDTO, ExchangeRateDTO
 from model import model
 from view import view
 
@@ -27,6 +26,7 @@ def get_currencies(request):
 @ExchangeServiceRequestHandler.reg_handler("GET", "/currency")
 def get_currency(request):
     code = parser.parse_currency_code(request.path)
+    validator.validate_get_currency(code)
     currency = model.get_currency(CurrencyDTO(code=code))
 
     return view.response_get_currency(currency)
@@ -35,9 +35,7 @@ def get_currency(request):
 @ExchangeServiceRequestHandler.reg_handler("POST", "/currencies")
 def post_currencies(request):
     params = parser.parse_request_params(request)
-
-    if not parser.validate_params(params, ("code", "name", "sign")):
-        raise CurrencyFieldError()
+    validator.validate_post_currencies(params)
 
     currency = model.add_currency(
         CurrencyDTO(code=params["code"], full_name=params["name"], sign=params["sign"])
@@ -46,15 +44,13 @@ def post_currencies(request):
     return view.response_post_currencies(currency)
 
 
-# ------------- exchange rates handlers ----------------------------------------
+# ------------- exchange handlers ---------------------------------------------
 
 
 @ExchangeServiceRequestHandler.reg_handler("GET", "/exchange")
 def get_exchange(request):
     query_params = parser.parse_query_params(request.path)
-
-    if not parser.validate_params(query_params, ("from", "to", "amount")):
-        raise ExchangeFieldError()
+    validator.validate_get_exchange(query_params)
 
     exchange = model.get_exchange(
         ExchangeDTO(
@@ -67,9 +63,14 @@ def get_exchange(request):
     return view.response_get_exchange(exchange)
 
 
+# ------------- exchange rates handlers ----------------------------------------
+
+
 @ExchangeServiceRequestHandler.reg_handler("GET", "/exchangeRate")
 def get_exchange_rate(request):
     currency_codes = parser.parse_exchange_rate(request.path)
+    validator.validate_get_exchange_rate(currency_codes)
+
     exchange_rate = model.get_exchange_rate(
         ExchangeRateDTO(
             base=CurrencyDTO(code=currency_codes[0]),
@@ -90,11 +91,7 @@ def get_exchange_rates(request):
 @ExchangeServiceRequestHandler.reg_handler("POST", "/exchangeRates")
 def post_exchange_rates(request):
     params = parser.parse_request_params(request)
-
-    if not parser.validate_params(
-        params, ("baseCurrencyCode", "targetCurrencyCode", "rate")
-    ):
-        raise ExchangeRateFieldError()
+    validator.validate_post_exchange_rate(params)
 
     exchange_rate = model.add_exchange_rate(
         ExchangeRateDTO(
@@ -111,9 +108,7 @@ def post_exchange_rates(request):
 def patch_exchange_rate(request):
     currency_codes = parser.parse_exchange_rate(request.path)
     params = parser.parse_request_params(request)
-
-    if not parser.validate_params(params, ("rate",)):
-        raise ExchangeRateFieldError()
+    validator.validate_patch_exchange_rate(params, currency_codes)
 
     exchange_rate = model.patch_exchange_rate(
         ExchangeRateDTO(

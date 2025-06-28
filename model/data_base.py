@@ -1,7 +1,5 @@
-import sqlite3
-
 from decimal import Decimal, getcontext
-
+import sqlite3
 
 DB_FILE = "data/currency_exchange.sqlite3"
 
@@ -17,7 +15,6 @@ EXCHANGE_ROWID_QUERY = EXCHANGE_QUERY.format("rowid")
 
 get_currency_by_id = lambda c_id: get_currency(CURRENCY_BY_ID_QUERY, c_id)
 get_currency_by_code = lambda c_code: get_currency(CURRENCY_BY_CODE_QUERY, c_code)
-
 
 
 def adapt_decimal(d):
@@ -52,8 +49,8 @@ def create_currensies():
     			CREATE TABLE IF NOT EXISTS currencies (
     			ID    		INTEGER PRIMARY KEY AUTOINCREMENT,
     			Code  		VARCHAR NOT NULL, 
-    			FullName   	VARCHAR NOT NULL, 
-    			Sign   		VARCHAR
+    			FullName   	VARCHAR NOT NULL ON CONFLICT REPLACE DEFAULT "", 
+    			Sign   		VARCHAR NOT NULL ON CONFLICT REPLACE DEFAULT ""
     		)
     		"""
         )

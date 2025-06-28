@@ -4,7 +4,6 @@ from entities import Response
 from exceptions import handling_exceptions
 from view.view import response_to_error
 
-
 ALLOWED_HOSTS = "*"
 ALLOWED_METHODS = "POST, PATCH"
 SERVICE_METHODS = "OPTIONS, GET, POST, PATCH"
@@ -12,7 +11,6 @@ SERVICE_METHODS = "OPTIONS, GET, POST, PATCH"
 
 class BaseRequestHandler(BaseHTTPRequestHandler):
     _handlers = {}
-
 
     # --------------- override methods ----------------------------------------
 
@@ -33,7 +31,6 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
         if not (resp.body is None):
             self.wfile.write(resp.body)
 
-
     def do_POST(self):
         handler = self.get_handler(self.default_handler)
 
@@ -51,7 +48,6 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
         if not (resp.body is None):
             self.wfile.write(resp.body)
 
-
     def do_PATCH(self):
         handler = self.get_handler(self.default_handler)
 
@@ -68,7 +64,6 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
 
         if not (resp.body is None):
             self.wfile.write(resp.body)
-
 
     def do_OPTIONS(self):
         print("OPTIONS: start")
@@ -88,13 +83,11 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
 
         print("OPTIONS: end")
 
-
     # --------------- static methods ------------------------------------------
 
     @staticmethod
     def default_handler(path: str):
         return response_to_error(400, "Undefined path")
-
 
     # --------------- class methods -------------------------------------------
 
@@ -122,7 +115,6 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
         } 
     }
     """
-
 
     # --------------- instance methods ----------------------------------------
 

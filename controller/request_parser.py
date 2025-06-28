@@ -1,25 +1,23 @@
 from typing import Dict, Tuple
 from urllib.parse import unquote
 
-from exceptions import NoCurrencyCodeError, NoExchangeRateCodeError, QueryParamsError
+from exceptions import CurrencyError, ExchangeRateError, QueryParamsError
 
 
-# ToDo: добавить валидацию и проверку формата кода
 def parse_currency_code(path: str) -> str:
     code = path[path.rfind("/") + 1 :]
 
-    if (len(code) < 3) or (code == "currency"):
-        raise NoCurrencyCodeError()
+    if (code == "currency") or (len(code) == 0):
+        raise CurrencyError(400, "Currency code is missing in the address")
 
     return code
 
 
-# ToDo: добавить валидацию и проверку формата кода
 def parse_exchange_rate(path: str) -> Tuple[str]:
     code = path[path.rfind("/") + 1 :]
 
-    if (len(code) < 6) or (code == "exchangeRate"):
-        raise NoExchangeRateCodeError()
+    if (code == "exchangeRate") or (len(code) == 0):
+        raise ExchangeRateError(400, "Currencies of pairs are absent in the address")
 
     return code[:3], code[3:]
 
@@ -35,6 +33,7 @@ def parse_request_params(request) -> Dict:
         request_body = unquote(request_body, encoding="ascii")
         print("Data:", request_body)
 
+        # возможна ошибка
         params = {
             k: __spaces(v)
             for k, v in [pair.split("=") for pair in request_body.split("&")]
@@ -48,20 +47,16 @@ def parse_query_params(path: str) -> Dict:
     params = {}
 
     if "?" not in path:
-        raise QueryParamsError()
+        raise QueryParamsError(400, "Query parameters missing")
 
     query = path[path.find("?") + 1 :]
 
     print("Data:", query)
 
+    # тут возможна ошибка
     params = {k: __spaces(v) for k, v in [pair.split("=") for pair in query.split("&")]}
 
     return params
-
-
-# проверка того, что все значения keys содержатся в params
-def validate_params(params: Dict, keys: Tuple) -> bool:
-    return set(keys) <= set(params.keys())
 
 
 def __spaces(s: str) -> str:

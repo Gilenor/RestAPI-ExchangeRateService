@@ -3,7 +3,6 @@ import sqlite3
 from entities import Response
 from view.view import response_to_error
 
-
 """
 sqlite errors
 
@@ -20,39 +19,43 @@ NotSupportedError
 """
 
 
-class QueryParamsError(Exception):
+class BaseResponseError(Exception):
+    def __init__(self, code: int = 400, message: str = ""):
+        super().__init__(message)
+
+        self.code = code
+        self.message = message
+
+
+class PathError(BaseResponseError):
     pass
 
 
-class CurrencyFieldError(KeyError):
+class DataError(BaseResponseError):
     pass
 
 
-class NoCurrencyCodeError(Exception):
+class FieldError(BaseResponseError):
     pass
 
 
-class CurrencyNotFoundError(Exception):
+class FormatError(BaseResponseError):
     pass
 
 
-class CurrencyInvalidDataError(Exception):
+class QueryParamsError(BaseResponseError):
     pass
 
 
-class ExchangeFieldError(KeyError):
+class CurrencyError(BaseResponseError):
     pass
 
 
-class ExchangeRateFieldError(KeyError):
+class ExchangeError(BaseResponseError):
     pass
 
 
-class NoExchangeRateCodeError(Exception):
-    pass
-
-
-class ExchangeRateNotFoundError(Exception):
+class ExchangeRateError(BaseResponseError):
     pass
 
 
@@ -66,8 +69,6 @@ class OperationalError(sqlite3.OperationalError):
 
 class ProgrammingError(sqlite3.ProgrammingError):
     pass
-
-
 
 
 def get_programming_error_response(err: sqlite3.Error):
@@ -93,34 +94,8 @@ def get_operational_error_response(err: sqlite3.Error):
 def handling_exceptions(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
-    except QueryParamsError:
-        return response_to_error(400, "Query parameters missing, or bad format")
-
-    except CurrencyFieldError:
-        return response_to_error(400, "Not all fields were transferred for currency")
-    except ExchangeFieldError:
-        return response_to_error(
-            400, "Not all query-fields were transferred for exchange"
-        )
-    except ExchangeRateFieldError:
-        return response_to_error(
-            400, "Not all fields were transferred for exchange_rate"
-        )
-
-    except NoCurrencyCodeError:
-        return response_to_error(400, "Currency code is missing in the address")
-    except NoExchangeRateCodeError:
-        return response_to_error(
-            400, "Current currencies of pairs are absent in the address"
-        )
-
-    except CurrencyNotFoundError:
-        return response_to_error(404, "Currency not found")
-    except ExchangeRateNotFoundError:
-        return response_to_error(404, "The exchange rate for the couple was not found")
-
-    except CurrencyInvalidDataError:
-        return response_to_error(400, "Currency ivalid data")
+    except BaseResponseError as e:
+        return response_to_error(e.code, e.message)
 
     except sqlite3.IntegrityError as err:
         return get_integrity_error_response(err)

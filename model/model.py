@@ -4,16 +4,10 @@ from decimal import Decimal
 from typing import List, Tuple
 
 from entities import CurrencyDTO, ExchangeDTO, ExchangeRateDTO
-from exceptions import (
-    CurrencyNotFoundError,
-    CurrencyInvalidDataError,
-    ExchangeRateNotFoundError,
-)
+from exceptions import CurrencyError, ExchangeRateError
 
-from . import data_base as base
+from . import data_base as db
 from .graph import Graph
-
-
 
 __exchanges = Graph()
 
@@ -22,25 +16,20 @@ __exchanges = Graph()
 
 
 def get_currency(currency: CurrencyDTO) -> CurrencyDTO:
-    currency_record = base.get_currency_by_code(currency.code)
+    record = db.get_currency_by_code(currency.code)
+    __check_currencies_exist((record, currency))
 
-    if currency_record is None:
-        raise CurrencyNotFoundError()
-
-    return CurrencyDTO(*currency_record)
+    return CurrencyDTO(*record)
 
 
 def get_currencies() -> List[CurrencyDTO]:
-    currencies = [CurrencyDTO(*currency) for currency in base.get_currencies()]
+    currencies = [CurrencyDTO(*currency) for currency in db.get_currencies()]
 
     return currencies
 
 
 def add_currency(currency: CurrencyDTO) -> CurrencyDTO:
-    if len(currency.code) != 3:
-        raise CurrencyInvalidDataError()
-
-    new_currency = base.add_currency(currency.code, currency.full_name, currency.sign)
+    new_currency = db.add_currency(currency.code, currency.full_name, currency.sign)
 
     return CurrencyDTO(*new_currency)
 
@@ -49,18 +38,16 @@ def add_currency(currency: CurrencyDTO) -> CurrencyDTO:
 
 
 def get_exchange(exchange: ExchangeDTO) -> ExchangeDTO:
-    base_currency = base.get_currency_by_code(exchange.base_currency.code)
-    target_currency = base.get_currency_by_code(exchange.target_currency.code)
-
-    if (base_currency is None) or (target_currency is None):
-        raise CurrencyNotFoundError()
-
-    exchange_rate = __get_exchange_rate_for_pair(
-        CurrencyDTO(*base_currency), CurrencyDTO(*target_currency)
+    base = db.get_currency_by_code(exchange.base_currency.code)
+    target = db.get_currency_by_code(exchange.target_currency.code)
+    __check_currencies_exist(
+        (base, exchange.base_currency), (target, exchange.target_currency)
     )
 
-    if exchange_rate is None:
-        raise ExchangeRateNotFoundError()
+    exchange_rate = __get_exchange_rate_for_pair(
+        CurrencyDTO(*base), CurrencyDTO(*target)
+    )
+    __check_exchange_rate_exist((exchange_rate, exchange))
 
     return ExchangeDTO(
         base=exchange_rate.base_currency,
@@ -71,29 +58,27 @@ def get_exchange(exchange: ExchangeDTO) -> ExchangeDTO:
 
 
 def get_exchange_rate(exchange_rate: ExchangeRateDTO) -> ExchangeRateDTO:
-    base_currency = base.get_currency_by_code(exchange_rate.base_currency.code)
-    target_currency = base.get_currency_by_code(exchange_rate.target_currency.code)
+    base = db.get_currency_by_code(exchange_rate.base_currency.code)
+    target = db.get_currency_by_code(exchange_rate.target_currency.code)
+    __check_currencies_exist(
+        (base, exchange_rate.base_currency), (target, exchange_rate.target_currency)
+    )
 
-    if (base_currency is None) or (target_currency is None):
-        raise CurrencyNotFoundError()
-
-    exchange_rate = base.get_exchange_rate(base_currency[0], target_currency[0])
-
-    if exchange_rate is None:
-        raise ExchangeRateNotFoundError()
+    exchange_rate_record = db.get_exchange_rate(base[0], target[0])
+    __check_exchange_rate_exist((exchange_rate_record, exchange_rate))
 
     return ExchangeRateDTO(
-        _id=exchange_rate[0],
-        base=CurrencyDTO(*base_currency),
-        target=CurrencyDTO(*target_currency),
-        rate=exchange_rate[3],
+        _id=exchange_rate_record[0],
+        base=CurrencyDTO(*base),
+        target=CurrencyDTO(*target),
+        rate=exchange_rate_record[3],
     )
 
 
 def get_exchange_rates() -> List[ExchangeRateDTO]:
     exchange_rates = []
 
-    for e in base.get_exchange_rates():
+    for e in db.get_exchange_rates():
         # возможно распаковка кортежа не лучший способ инициализации
         # потому-что может измениться порядок и форма данных в базе
         base_currency = CurrencyDTO(*e[1:5])
@@ -105,47 +90,43 @@ def get_exchange_rates() -> List[ExchangeRateDTO]:
 
 
 def add_exchange_rate(exchange_rate: ExchangeRateDTO) -> ExchangeRateDTO:
-    base_currency = base.get_currency_by_code(exchange_rate.base_currency.code)
-    target_currency = base.get_currency_by_code(exchange_rate.target_currency.code)
-
-    if (base_currency is None) or (target_currency is None):
-        raise CurrencyNotFoundError()
-
-    new_exchange_rate = base.add_exchange_rate(
-        base_currency[0], target_currency[0], exchange_rate.rate
+    base = db.get_currency_by_code(exchange_rate.base_currency.code)
+    target = db.get_currency_by_code(exchange_rate.target_currency.code)
+    __check_currencies_exist(
+        (base, exchange_rate.base_currency), (target, exchange_rate.target_currency)
     )
 
+    new_exchange_rate = db.add_exchange_rate(base[0], target[0], exchange_rate.rate)
+
     # добавляем новую связь для валютной пары в граф
-    __exchanges.add_pair(base_currency[1], target_currency[1])
+    __exchanges.add_pair(base[1], target[1])
 
     return ExchangeRateDTO(
         _id=new_exchange_rate[0],
-        base=CurrencyDTO(*base_currency),
-        target=CurrencyDTO(*target_currency),
+        base=CurrencyDTO(*base),
+        target=CurrencyDTO(*target),
         rate=new_exchange_rate[3],
     )
 
 
 def patch_exchange_rate(exchange_rate: ExchangeRateDTO) -> ExchangeRateDTO:
-    base_currency = base.get_currency_by_code(exchange_rate.base_currency.code)
-    target_currency = base.get_currency_by_code(exchange_rate.target_currency.code)
+    base = db.get_currency_by_code(exchange_rate.base_currency.code)
+    target = db.get_currency_by_code(exchange_rate.target_currency.code)
+    __check_currencies_exist(
+        (base, exchange_rate.base_currency), (target, exchange_rate.target_currency)
+    )
 
-    if (base_currency is None) or (target_currency is None):
-        raise CurrencyNotFoundError()
+    exchange_rate_record = db.get_exchange_rate(base[0], target[0])
+    __check_exchange_rate_exist((exchange_rate_record, exchange_rate))
 
-    exchange_rate_record = base.get_exchange_rate(base_currency[0], target_currency[0])
-
-    if exchange_rate_record is None:
-        raise ExchangeRateNotFoundError()
-
-    exchange_rate_patch = base.patch_exchange_rate(
+    exchange_rate_patch = db.patch_exchange_rate(
         exchange_rate_record[0], exchange_rate.rate
     )
 
     return ExchangeRateDTO(
         _id=exchange_rate_patch[0],
-        base=CurrencyDTO(*base_currency),
-        target=CurrencyDTO(*target_currency),
+        base=CurrencyDTO(*base),
+        target=CurrencyDTO(*target),
         rate=exchange_rate_patch[3],
     )
 
@@ -159,9 +140,9 @@ def __get_exchange_rate_for_pair(
 
     rate = Decimal(1)
     codes = __exchanges.get_path(from_currency.code, to_currency.code)
-    currencies = [base.get_currency_by_code(code) for code in codes]
+    currencies = [db.get_currency_by_code(code) for code in codes]
 
-    if not all(currencies):
+    if not codes or not all(currencies):
         return None
 
     for i in range(1, len(currencies)):
@@ -185,8 +166,8 @@ def __get_exchange_rate_for_pair(
 def __get_rate_for_pair(from_currency_id: int, to_currency_id: int) -> Decimal:
     # ToDo: возможно лучше сразу возвращать из базы, вместо двух запросов
     exchange_rates = [
-        base.get_exchange_rate(from_currency_id, to_currency_id),  # прямой курс
-        base.get_exchange_rate(to_currency_id, from_currency_id),  # обратный курс
+        db.get_exchange_rate(from_currency_id, to_currency_id),  # прямой курс
+        db.get_exchange_rate(to_currency_id, from_currency_id),  # обратный курс
     ]
 
     if not any(exchange_rates):
@@ -203,15 +184,34 @@ def __get_rate_for_pair(from_currency_id: int, to_currency_id: int) -> Decimal:
     return rate
 
 
+def __check_currencies_exist(*currencies):
+    """в случае если какая-то из валют является None бросается исключение CurrencyError с кодом этой валюты"""
+    not_existing = [currency.code for record, currency in currencies if not record]
+
+    if len(not_existing) > 0:
+        raise CurrencyError(404, f"Error currency not found: {not_existing}")
+
+
+def __check_exchange_rate_exist(*exchange_rates):
+    """в случае если какой-то из курсов является None бросается исключение ExchangeRateError с кодом этого курса"""
+    not_existing = [
+        (exch.base_currency.code, exch.target_currency.code)
+        for record, exch in exchange_rates
+        if not record
+    ]
+
+    if len(not_existing) > 0:
+        raise ExchangeRateError(404, f"Error exchange rate not exist: {not_existing}")
+
+
 # заполняем граф данными из таблицы, нужно будет переделать чтобы структура сохранялась
 # либо в файле, либо в базе данных, сейчас она каждый раз создается заново
 def __fill_graph():
-    for exchange_rate in base.get_exchange_rates():
+    for exchange_rate in db.get_exchange_rates():
         base_currency = exchange_rate[1:5]
         target_currency = exchange_rate[5:9]
 
         __exchanges.add_pair(base_currency[1], target_currency[1])
-    print(__exchanges)
 
 
 __fill_graph()

@@ -1,7 +1,8 @@
+from decimal import Decimal
 import sqlite3
+
 import requests
 
-from decimal import Decimal
 from model import data_base as base
 
 
@@ -73,9 +74,8 @@ for currency in filter(lambda c: c[2] != "", currencies):
     try:
         c = base.add_currency(currency[2], currency[1], None)
         print(c)
-    except sqlite3.Error as e:
-        #pass
-        print(type(e))
+    except Exception as e:
+        print(type(e), e)
 
 
 # заполняем таблицу <exchange_rates>
@@ -86,6 +86,5 @@ for exchange in exchanges:
         rate = Decimal(str(exchange["Value"])) / Decimal(str(exchange["Nominal"]))
         e = base.add_exchange_rate(base_currency[0], target_currency[0], rate)
         print(e)
-    except sqlite3.Error as e:
-        #pass
-        print(type(e))
+    except Exception as e:
+        print(type(e), e)
