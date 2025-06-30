@@ -37,5 +37,6 @@ match_types.ExchangeRate.Post = SimpleNamespace(
 )
 
 match_types.ExchangeRate.Patch = SimpleNamespace(
-    names=("fromCurrency", "toCurrency", "rate"), types=(__CODE, __CODE, __POSITIVE_FLOAT)
+    names=("fromCurrency", "toCurrency", "rate"),
+    types=(__CODE, __CODE, __POSITIVE_FLOAT),
 )

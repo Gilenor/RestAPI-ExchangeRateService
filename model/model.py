@@ -40,7 +40,9 @@ def get_exchange(exchange: ExchangeDTO) -> ExchangeDTO:
     base = db.get_currency_by_code(exchange.base_currency.code)
     target = db.get_currency_by_code(exchange.target_currency.code)
 
-    exchange_rate = __get_exchange_rate_for_pair(CurrencyDTO(*base), CurrencyDTO(*target))
+    exchange_rate = __get_exchange_rate_for_pair(
+        CurrencyDTO(*base), CurrencyDTO(*target)
+    )
 
     return ExchangeDTO(
         base=exchange_rate.base_currency,
@@ -122,18 +124,16 @@ def __get_exchange_rate_for_pair(
     currencies = [db.get_currency_by_code(code) for code in codes]
 
     if not codes:
-        raise ExchangeRateError(404, f"Exchange rate not exist: {from_currency.code}, {to_currency.code}")
+        raise ExchangeRateError(
+            404, f"Exchange rate not exist: {from_currency.code}, {to_currency.code}"
+        )
 
     for i in range(1, len(currencies)):
         base_currency = currencies[i - 1]
         target_currency = currencies[i]
         rate = rate * __get_rate_for_pair(base_currency, target_currency)
 
-    return ExchangeRateDTO(
-        base=from_currency,
-        target=to_currency,
-        rate=rate,
-    )
+    return ExchangeRateDTO(base=from_currency, target=to_currency, rate=rate)
 
 
 def __get_rate_for_pair(from_currency: Tuple, to_currency: Tuple) -> Decimal:
@@ -143,11 +143,13 @@ def __get_rate_for_pair(from_currency: Tuple, to_currency: Tuple) -> Decimal:
     ]
 
     if not any(exchange_rates):
-        raise ExchangeRateError(404, f"Exchange rate not exist: {from_currency[1]}, {to_currency[1]}")
+        raise ExchangeRateError(
+            404, f"Exchange rate not exist: {from_currency[1]}, {to_currency[1]}"
+        )
 
     if exchange_rates[0]:
         return exchange_rates[0][3]
-    
+
     return Decimal(1) / exchange_rates[1][3]
 
 
