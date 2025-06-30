@@ -3,7 +3,7 @@ from types import SimpleNamespace
 __CODE = "[A-Z]{3}"
 __CHAR = "."
 __STRING = ".*"
-__POSITIVE_FLOAT = "([0]?|[1-9]?[0-9]*)[.]?[0-9]+"
+__POSITIVE_FLOAT = "[0][.][0-9]*|[1-9][0-9]*[.]?[0-9]*"
 
 __SIGN = ".?"
 
@@ -28,7 +28,7 @@ match_types.Exchange.Get = SimpleNamespace(
 )
 
 match_types.ExchangeRate.Get = SimpleNamespace(
-    names=("base", "target"), types=(__CODE, __CODE)
+    names=("fromCurrency", "toCurrency"), types=(__CODE, __CODE)
 )
 
 match_types.ExchangeRate.Post = SimpleNamespace(
@@ -37,5 +37,5 @@ match_types.ExchangeRate.Post = SimpleNamespace(
 )
 
 match_types.ExchangeRate.Patch = SimpleNamespace(
-    names=("from", "to", "rate"), types=(__CODE, __CODE, __POSITIVE_FLOAT)
+    names=("fromCurrency", "toCurrency", "rate"), types=(__CODE, __CODE, __POSITIVE_FLOAT)
 )
