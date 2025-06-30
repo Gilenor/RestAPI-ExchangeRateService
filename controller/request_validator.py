@@ -46,12 +46,12 @@ def validate_decorator(error_type: Exception, code: int, message: str):
 # ---------- currency ---------------------------------------------------------
 
 
-@validate_decorator(CurrencyError, 400, "Error currency params: ")
+@validate_decorator(CurrencyError, 400, "Error currency: ")
 def validate_get_currency(code: str):
     validate_params({"code": code}, mt.Currency.Get.names, mt.Currency.Get.types)
 
 
-@validate_decorator(CurrencyError, 400, "Error currency params: ")
+@validate_decorator(CurrencyError, 400, "Error currency: ")
 def validate_post_currencies(params: Dict):
     validate_params(params, mt.Currency.Post.names, mt.Currency.Post.types)
 
@@ -59,7 +59,7 @@ def validate_post_currencies(params: Dict):
 # ---------- exchange ---------------------------------------------------------
 
 
-@validate_decorator(ExchangeError, 400, "Error exchange params: ")
+@validate_decorator(ExchangeError, 400, "Error exchange: ")
 def validate_get_exchange(query_params: Dict):
     validate_params(query_params, mt.Exchange.Get.names, mt.Exchange.Get.types)
 
@@ -67,18 +67,18 @@ def validate_get_exchange(query_params: Dict):
 # ---------- exchange rate ----------------------------------------------------
 
 
-@validate_decorator(ExchangeRateError, 400, "Error exchange rate params: ")
+@validate_decorator(ExchangeRateError, 400, "Error exchange rate: ")
 def validate_get_exchange_rate(codes: Tuple[str]):
-    params = dict(zip(("base", "target"), codes))
+    params = dict(zip(("fromCurrency", "toCurrency"), codes))
     validate_params(params, mt.ExchangeRate.Get.names, mt.ExchangeRate.Get.types)
 
 
-@validate_decorator(ExchangeRateError, 400, "Error exchange rate params: ")
+@validate_decorator(ExchangeRateError, 400, "Error exchange rate: ")
 def validate_post_exchange_rate(params: Dict):
     validate_params(params, mt.ExchangeRate.Post.names, mt.ExchangeRate.Post.types)
 
 
-@validate_decorator(ExchangeRateError, 400, "Error exchange rate params: ")
+@validate_decorator(ExchangeRateError, 400, "Error exchange rate: ")
 def validate_patch_exchange_rate(params: Dict, codes: Tuple[str]):
-    params = {"from": codes[0], "to": codes[1], **params}
+    params = {"fromCurrency": codes[0], "toCurrency": codes[1], **params}
     validate_params(params, mt.ExchangeRate.Patch.names, mt.ExchangeRate.Patch.types)

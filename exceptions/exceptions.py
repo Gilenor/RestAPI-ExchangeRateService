@@ -27,14 +27,6 @@ class BaseResponseError(Exception):
         self.message = message
 
 
-class PathError(BaseResponseError):
-    pass
-
-
-class DataError(BaseResponseError):
-    pass
-
-
 class FieldError(BaseResponseError):
     pass
 

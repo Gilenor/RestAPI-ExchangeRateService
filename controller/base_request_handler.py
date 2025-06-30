@@ -71,7 +71,7 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
         self.send_response(204, "OK")
 
         headers = (
-            ("Allow", "SERVICE_METHODS"),
+            ("Allow", SERVICE_METHODS),
             ("Access-Control-Allow-Origin", ALLOWED_HOSTS),
             ("Access-Control-Allow-Methods", ALLOWED_METHODS),
             ("Access-Control-Allow-Headers", "Content-type"),
@@ -131,9 +131,6 @@ class BaseRequestHandler(BaseHTTPRequestHandler):
 
         method = request.command.upper()
         path = request.path
-
-        # while "//" in path:
-        #    path = path.replace("//", "/")
 
         # наивное решение, но пока сойдет
         if path.count("/") > 1:
