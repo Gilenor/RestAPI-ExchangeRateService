@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 __CODE = "[A-Z]{3}"
 __CHAR = "."
-__STRING = ".*"
+__STRING = ".{0,64}"
 __POSITIVE_FLOAT = "[0][.][0-9]*|[1-9][0-9]*[.]?[0-9]*"
 
 __SIGN = ".?"
