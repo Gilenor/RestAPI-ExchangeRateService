@@ -1,5 +1,9 @@
-from decimal import Decimal, getcontext
 import sqlite3
+
+from typing import Tuple
+from decimal import Decimal
+from exceptions import CurrencyError, ExchangeRateError
+
 
 DB_FILE = "data/currency_exchange.sqlite3"
 
@@ -13,8 +17,8 @@ CURRENCY_BY_CODE_QUERY = CURRENCY_QUERY.format("Code")
 EXCHANGE_ROWID_QUERY = EXCHANGE_QUERY.format("rowid")
 
 
-get_currency_by_id = lambda c_id: get_currency(CURRENCY_BY_ID_QUERY, c_id)
-get_currency_by_code = lambda c_code: get_currency(CURRENCY_BY_CODE_QUERY, c_code)
+#get_currency_by_id = lambda c_id: get_currency(CURRENCY_BY_ID_QUERY, c_id)
+#get_currency_by_code = lambda c_code: get_currency(CURRENCY_BY_CODE_QUERY, c_code)
 
 
 def adapt_decimal(d):
@@ -33,8 +37,6 @@ sqlite3.register_adapter(Decimal, adapt_decimal)
 # Register the converter
 sqlite3.register_converter("decimal", convert_decimal)
 
-
-# getcontext().prec = 6
 
 
 # ---------- create tables ----------------------------------------------------
@@ -143,6 +145,22 @@ def get_currency(sql_query: str, *args):
     return currency
 
 
+def get_currency_by_id(currency_id: int, quiet: bool=False): 
+    currency = get_currency(CURRENCY_BY_ID_QUERY, currency_id)
+
+    if currency is None and not quiet:
+        raise CurrencyError(404, f"Currency not found: id={currency_id}")
+    return currency
+
+
+def get_currency_by_code(currency_code: str, quiet: bool=False): 
+    currency = get_currency(CURRENCY_BY_CODE_QUERY, currency_code)
+
+    if currency is None and not quiet:
+        raise CurrencyError(404, f"Currency not found: code={currency_code}")
+    return currency
+
+
 def add_currency(code: str, full_name: str, sign: str):
     lastrowid = -1
 
@@ -166,7 +184,7 @@ def add_currency(code: str, full_name: str, sign: str):
 # ---------- exchange rates ---------------------------------------------------
 
 
-def get_exchange_rate(base_currency_id: int, target_currency_id: int):
+def get_exchange_rate(base_currency: Tuple, target_currency: Tuple, quiet: bool=False):
     exchange_rate = None
 
     with sqlite3.connect(DB_FILE, detect_types=sqlite3.PARSE_DECLTYPES) as con:
@@ -178,11 +196,14 @@ def get_exchange_rate(base_currency_id: int, target_currency_id: int):
 				FROM	exchange_rates
 				WHERE	BaseCurrencyId=? AND TargetCurrencyId=?;
 			""",
-            (base_currency_id, target_currency_id),
+            (base_currency[0], target_currency[0]),
         )
 
         exchange_rate = cur.fetchone()
         cur.close()
+
+    if exchange_rate is None and not quiet:
+        raise ExchangeRateError(404, f"Exchange rate not exist: {base_currency[1]}, {target_currency[1]}")
 
     return exchange_rate
 
