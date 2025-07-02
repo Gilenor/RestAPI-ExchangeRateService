@@ -252,6 +252,9 @@ def get_exchange_rates():
 def add_exchange_rate(base_id: int, target_id: int, rate: Decimal):
     lastrowid = -1
 
+    if base_id == target_id:
+        raise ExchangeRateError(400, "Error exchange rate: the currencies are the same")
+
     with sqlite3.connect(DB_FILE) as con:
         cur = con.cursor()
 
