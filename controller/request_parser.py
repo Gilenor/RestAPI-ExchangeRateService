@@ -35,9 +35,10 @@ def parse_request_params(request) -> Dict:
 
         # возможна ошибка
         params = {
-            k: __spaces(v)
+            k: __to_spaces(v, "+")
             for k, v in [pair.split("=") for pair in request_body.split("&")]
         }
+    print("params:", params)
 
     return params
 
@@ -54,10 +55,11 @@ def parse_query_params(path: str) -> Dict:
     print("Data:", query)
 
     # тут возможна ошибка
-    params = {k: __spaces(v) for k, v in [pair.split("=") for pair in query.split("&")]}
+    params = {k: __to_spaces(v, "%20") for k, v in [pair.split("=") for pair in query.split("&")]}
+    print("params:", params)
 
     return params
 
 
-def __spaces(s: str) -> str:
-    return s.replace("+", " ", s.count("+"))
+def __to_spaces(s: str, old: str) -> str:
+    return s.replace(old, " ")

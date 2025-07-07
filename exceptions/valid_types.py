@@ -1,11 +1,11 @@
 from types import SimpleNamespace
 
-__CODE = "[A-Z]{3}"
-__CHAR = "."
-__STRING = ".{0,64}"
-__POSITIVE_FLOAT = "[0][.][0-9]*|[1-9][0-9]*[.]?[0-9]*"
 
-__SIGN = ".?"
+__SIGN = r"\S?"
+__CODE = "[A-Z]{3}"
+__STRING = ".{0,64}"
+#__POSITIVE_FLOAT = "[0][.][0-9]*|[1-9][0-9]*[.]?[0-9]*"
+__POSITIVE_FLOAT = r"[+]?(0[.]0*[1-9]\d*|[1-9]\d*[.]?\d*)"
 
 
 match_types = SimpleNamespace(
